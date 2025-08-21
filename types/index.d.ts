@@ -1,10 +1,3 @@
-// type User = {
-//   name: string;
-//   email: string;
-//   image?: string;
-//   accountId: string;
-// };
-
 enum Subject {
   maths = "maths",
   language = "language",
@@ -64,7 +57,6 @@ interface Avatar {
   height: number;
   className?: string;
 }
-
 
 interface SavedMessage {
   role: "user" | "system" | "assistant";

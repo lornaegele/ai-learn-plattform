@@ -4,7 +4,10 @@ export const subjects = [
   "science",
   "history",
   "coding",
+  "geography",
   "economics",
+  "finance",
+  "business",
 ];
 
 export const navItems = [
@@ -27,7 +30,7 @@ export const voices = {
   female: { casual: "ZIlrSGI4jZqobxRKprJz", formal: "sarah" },
 };
 
-export const recentSessions = [
+export const recentSessions: Companion[] = [
   {
     id: "1",
     subject: "science",
