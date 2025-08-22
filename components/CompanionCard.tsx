@@ -25,15 +25,15 @@ const CompanionCard = ({
   color,
   bookmarked,
 }: CompanionCardProps) => {
-  // const [bookmarkedState, setBookmarkedState] = useState(bookmarked);
+  const [bookmarkedState, setBookmarkedState] = useState(bookmarked);
   const pathname = usePathname();
   const handleBookmark = async () => {
-    if (bookmarked) {
+    if (bookmarkedState) {
       await removeBookmark(id, pathname);
-      // setBookmarkedState(false);
+      setBookmarkedState(false);
     } else {
       await addBookmark(id, pathname);
-      // setBookmarkedState(true);
+      setBookmarkedState(true);
     }
   };
   return (
@@ -43,7 +43,9 @@ const CompanionCard = ({
         <button className="companion-bookmark" onClick={handleBookmark}>
           <Image
             src={
-              bookmarked ? "/icons/bookmark-filled.svg" : "/icons/bookmark.svg"
+              bookmarkedState
+                ? "/icons/bookmark-filled.svg"
+                : "/icons/bookmark.svg"
             }
             alt="bookmark"
             width={12.5}
