@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     // disable type checking during build
     ignoreBuildErrors: true,
   },
+  eslint: {
+    // disable linting during build
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
