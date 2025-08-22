@@ -1,4 +1,5 @@
 import CompanionForm from "@/components/CompanionForm";
+import { newCompanionPermissions } from "@/lib/actions/companion.actions";
 import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,8 +13,7 @@ const NewCompanion = async () => {
     redirect("/sign-in");
   }
 
-  // const canCreateCompanion = await newCompanionPermissions();
-  const canCreateCompanion = true;
+  const canCreateCompanion = await newCompanionPermissions();
 
   return (
     <main className="min-2xl:w-1/3 min-md:w-2/3 items-center justify-center px-8">
@@ -25,12 +25,14 @@ const NewCompanion = async () => {
         </article>
       ) : (
         <article className="companion-limit">
-          <Image
-            src="/images/limit.svg"
-            alt="Companion limit reached"
-            width={360}
-            height={230}
-          />
+          <Link href="/subscription">
+            <Image
+              src="/images/limit.svg"
+              alt="Companion limit reached"
+              width={360}
+              height={230}
+            />
+          </Link>
           <div className="cta-badge">Upgrade your plan</div>
           <h1>You’ve Reached Your Limit</h1>
           <p>
@@ -39,9 +41,12 @@ const NewCompanion = async () => {
           </p>
           <Link
             href="/subscription"
-            className="btn-primary w-full justify-center"
+            className="btn-primary w-full justify-center bg-amber-300 max-w-64"
           >
             Upgrade My Plan
+          </Link>
+          <Link href="/" className="btn-primary w-full justify-center max-w-64">
+            Back to Home
           </Link>
         </article>
       )}
