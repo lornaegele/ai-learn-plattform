@@ -84,7 +84,6 @@ export const getRecentSessions = async (limit = 10) => {
 
   if (error) throw new Error(error.message);
 
-  console.log("Recent sessions data:", data);
   return data.map(({ companions }) => companions);
 };
 
