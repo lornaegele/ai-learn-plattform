@@ -1,24 +1,12 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { cn, configureAssistant, getSubjectColor } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
-import Lottie, { LottieRefCurrentProps } from "lottie-react";
-interface CompanionComponentProps {
-  name: string;
-  subject: string;
-  title: string;
-  topic: string;
-  duration: number;
-  companionId: string;
-  userName: string;
-  userImage: string;
-  voice: string;
-  style: string;
-}
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import soundwaves from "@/constants/soundwaves.json";
-import { set } from "zod";
+import { addToSessionHistory } from "@/lib/actions/companion.actions";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -28,20 +16,18 @@ enum CallStatus {
 }
 
 const CompanionComponent = ({
-  name,
-  subject,
-  title,
-  topic,
-  duration,
   companionId,
+  subject,
+  topic,
+  name,
   userName,
   userImage,
   style,
   voice,
 }: CompanionComponentProps) => {
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
-  const [isMuted, setIsMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
 
   const lottieRef = useRef<LottieRefCurrentProps>(null);
@@ -58,31 +44,38 @@ const CompanionComponent = ({
 
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+
+    const onCallEnd = () => {
+      setCallStatus(CallStatus.FINISHED);
+      addToSessionHistory(companionId);
+    };
+
     const onMessage = (message: Message) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = { role: message.role, content: message.transcript };
         setMessages((prev) => [newMessage, ...prev]);
       }
     };
-    const onError = (error: Error) => console.log("Error in call:", error);
+
     const onSpeechStart = () => setIsSpeaking(true);
     const onSpeechEnd = () => setIsSpeaking(false);
+
+    const onError = (error: Error) => console.log("Error", error);
 
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
     vapi.on("error", onError);
-    vapi.on("speech-end", onSpeechEnd);
     vapi.on("speech-start", onSpeechStart);
+    vapi.on("speech-end", onSpeechEnd);
 
     return () => {
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
       vapi.off("message", onMessage);
       vapi.off("error", onError);
-      vapi.off("speech-end", onSpeechEnd);
       vapi.off("speech-start", onSpeechStart);
+      vapi.off("speech-end", onSpeechEnd);
     };
   }, []);
 
@@ -96,16 +89,12 @@ const CompanionComponent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     const assistantOverrides = {
-      variableValues: {
-        subject,
-        topic,
-        style,
-      },
+      variableValues: { subject, topic, style },
       clientMessages: ["transcript"],
       serverMessages: [],
     };
 
-    //@ts-expect-error
+    // @ts-expect-error
     vapi.start(configureAssistant(voice, style), assistantOverrides);
   };
 
@@ -141,6 +130,7 @@ const CompanionComponent = ({
                 className="max-sm:w-fit"
               />
             </div>
+
             <div
               className={cn(
                 "absolute transition-opacity duration-1000",
@@ -157,6 +147,7 @@ const CompanionComponent = ({
           </div>
           <p className="font-bold text-2xl">{name}</p>
         </div>
+
         <div className="user-section">
           <div className="user-avatar">
             <Image
@@ -178,7 +169,7 @@ const CompanionComponent = ({
           >
             <Image
               src={isMuted ? "/icons/mic-off.svg" : "/icons/mic-on.svg"}
-              alt="microphone"
+              alt="mic"
               width={36}
               height={36}
             />
@@ -189,11 +180,8 @@ const CompanionComponent = ({
           <button
             className={cn(
               "rounded-lg py-2 cursor-pointer transition-colors w-full text-white",
-              callStatus === CallStatus.ACTIVE
-                ? "bg-red-700 hover:bg-red-600"
-                : "bg-primary hover:bg-primary/90",
-              callStatus === CallStatus.CONNECTING &&
-                "animate-pulse cursor-not-allowed"
+              callStatus === CallStatus.ACTIVE ? "bg-red-700" : "bg-primary",
+              callStatus === CallStatus.CONNECTING && "animate-pulse"
             )}
             onClick={
               callStatus === CallStatus.ACTIVE ? handleDisconnect : handleCall
@@ -202,30 +190,32 @@ const CompanionComponent = ({
             {callStatus === CallStatus.ACTIVE
               ? "End Session"
               : callStatus === CallStatus.CONNECTING
-              ? "Connecting..."
+              ? "Connecting"
               : "Start Session"}
           </button>
         </div>
       </section>
+
       <section className="transcript">
         <div className="transcript-message no-scrollbar">
-          {messages.map((message, i) => {
+          {messages.map((message, index) => {
             if (message.role === "assistant") {
               return (
-                <p key={i} className="max-sm:text-sm">
+                <p key={index} className="max-sm:text-sm">
                   {name.split(" ")[0].replace("/[.,]/g, ", "")}:{" "}
                   {message.content}
                 </p>
               );
             } else {
               return (
-                <p key={i} className="text-primary max-sm:text-sm">
+                <p key={index} className="text-primary max-sm:text-sm">
                   {userName}: {message.content}
                 </p>
               );
             }
           })}
         </div>
+
         <div className="transcript-fade" />
       </section>
     </section>
